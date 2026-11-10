@@ -24,6 +24,8 @@ or you can chop and replant it sooner yourself.
 
 The **Help** button opens the full user manual ([docs/USER_MANUAL.md](docs/USER_MANUAL.md)).
 
+Requirements, use cases, user stories and scenarios are in [docs/ANALYSIS.md](docs/ANALYSIS.md). The UML (use case, class, state, sequence and activity diagrams) is in [docs/UML.md](docs/UML.md).
+
 ## Automated modules
 
 Four standalone modules (each a `GardenModule` subclass) run every simulation step. Each has a card in the
