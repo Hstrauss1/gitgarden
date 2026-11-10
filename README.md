@@ -121,3 +121,14 @@ No extra VM options are needed with that JDK.
 - JavaFX 21 (OpenJFX) API documentation, https://openjfx.io/javadoc/21/.
 - Parts of this code were written with an AI assistant (Claude, by Anthropic). Cite this as your course's
   academic-integrity policy requires.
+
+## License
+
+Copyright (C) 2026 Hudson Strauss and the CSEN 275 team.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the
+GNU General Public License as published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version. It is distributed WITHOUT ANY WARRANTY; see
+[LICENSE](LICENSE) for the full terms.
+
+The project is GPL-3.0 because `BonsaiGenerator` is a port of cbonsai, which is GPL-3.0 licensed.

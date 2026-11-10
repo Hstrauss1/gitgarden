@@ -1,3 +1,16 @@
+/*
+ * Computerized Bonsai Garden
+ * Copyright (C) 2026 Hudson Strauss and the CSEN 275 team.
+ *
+ * The algorithm in this file is ported from cbonsai by John Allbritten
+ * (https://gitlab.com/jallbrit/cbonsai), licensed under GPL-3.0.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version. It is distributed WITHOUT ANY WARRANTY; see the LICENSE
+ * file for details.
+ */
 package garden;
 
 import java.util.ArrayList;
