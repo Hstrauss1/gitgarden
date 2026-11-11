@@ -41,7 +41,7 @@ public final class GardenLog {
 
     /** Which part of the garden an entry is about. */
     public enum Category {
-        SYSTEM, TIME, WEATHER, WATERING, HEATING, PEST, REPLANT, PLANT, WILDLIFE, USER
+        SYSTEM, TIME, WEATHER, WATERING, HEATING, PEST, REPLANT, PLANT, WILDLIFE, INTRUDER, USER
     }
 
     /** One log line. */
@@ -238,7 +238,8 @@ public final class GardenLog {
         "             WEATHER   rain, drought, windstorm      WATERING  moisture sensors, sprinklers, valves",
         "             HEATING   temperature sensor, heaters   PEST      pest sensors, pesticide spraying",
         "             REPLANT   auto-replanting dead trees    PLANT     planting, growth, wilting, death, harvest",
-        "             WILDLIFE  cockroaches arriving          USER      everything a person clicked",
+        "             WILDLIFE  cockroaches arriving          INTRUDER  Hellfire Rider and Green Brute events",
+        "             USER      everything a person clicked",
         "Tip: search for 'ALERT' to find problems, or '====' to jump between daily reports.",
         "------------------------------------------------------------------------------------------------",
     };

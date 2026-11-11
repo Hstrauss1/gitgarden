@@ -26,7 +26,7 @@ The file is flushed to disk about once a second, and again when the window close
 |---|---|---|
 | INFO | Normal activity | sprinkler on/off, planting, harvest, heaters on/off, weather ended |
 | WARN | Needs attention | a tree started wilting, a cockroach arrived, a drought or windstorm began |
-| ALERT | Something bad happened | a tree DIED (with its cause), a cockroach is eating a tree, frost with the heaters off, pesticide tank empty |
+| ALERT | Something bad happened | a tree DIED (with its cause), a tree is ON FIRE, a Hellfire Rider or Green Brute arrived, a cockroach is eating a tree, frost with the heaters off, pesticide tank empty |
 | ERROR | A software problem was caught | includes the stack trace; the garden kept running |
 
 The Log tab's level filter shows the chosen level and everything more serious.
@@ -44,6 +44,7 @@ The Log tab's level filter shows the chosen level and everything more serious.
 | REPLANT | the groundskeeper removing dead trees and replanting beds |
 | PLANT | planting, wilting and recovery, death and its cause, automatic harvests |
 | WILDLIFE | cockroaches crawling in and starting to eat |
+| INTRUDER | the Hellfire Rider and Green Brute events: arriving, each smash, leaving |
 | USER | everything a person did: watering, harvesting, chopping, planting, stomping, spigots, speed, sliders, weather, modules switched on or off, pause |
 
 ## Daily report
@@ -57,7 +58,7 @@ At the end of each in-game day the log writes a divider and a summary:
 
 ## Finding things
 
-- **Why did a tree die?** Search for `DIED`. Each death line names the cause: drought (dry soil), windstorm, root rot, frost or cockroaches.
+- **Why did a tree die?** Search for `DIED`. Each death line names the cause: drought (dry soil), windstorm, root rot, frost, cockroach, fire, or being smashed by the Green Brute.
 - **One plot's history:** search for `Plot 14:` (include the colon, so `Plot 1` doesn't also match Plot 10 to Plot 19).
 - **Problems only:** set the level filter to "ALERT and worse".
 - **What a person did:** set the category filter to USER.

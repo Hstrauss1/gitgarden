@@ -1,6 +1,6 @@
 # Computerized Bonsai Garden: User Manual
 
-The garden is a fenced field of 40 bonsai beds in 4 rows. Each tree grows with the cbonsai branching algorithm. Water pipes run above every row, and four automated modules keep the garden alive: watering, heating, pest control and replanting. You can step in by hand at any time, or switch any module off and see what happens.
+The garden is a fenced field of 40 bonsai beds in 5 rows of 8. Each tree grows with the cbonsai branching algorithm. Water pipes run above every row, and four automated modules keep the garden alive: watering, heating, pest control and replanting. You can step in by hand at any time, or switch any module off and see what happens.
 
 ## Quick start
 
@@ -18,10 +18,12 @@ The garden is a fenced field of 40 bonsai beds in 4 rows. Each tree grows with t
 - **Multiplier** sets how much new trees branch (2 to 8).
 - **Help** opens this manual.
 - **Change weather** (in the bar below the toolbar) forces Clear, Rain, Drought or Windstorm.
+- **Trigger event** brings in a Hellfire Rider or a Green Brute right away (see Rare events).
 
 ## Clicking in the garden
 
-- **Growing or wilting tree:** click to water it by hand (+35% soil moisture).
+- **Growing or wilting tree:** click to water it by hand (+35% soil moisture). If it's on fire, the water puts the fire out.
+- **Green Brute:** click him 5 times to calm him down; he leaves without smashing any more trees.
 - **Mature tree** (sparkles): click to harvest it. A new tree is planted.
 - **Dead tree** (grey): click 3 times to chop it down.
 - **Empty bed** (stump with a green +): click to plant a new bonsai.
@@ -43,6 +45,16 @@ The garden is a fenced field of 40 bonsai beds in 4 rows. Each tree grows with t
 - **Rain:** waters every bed and makes cherry trees grow faster. Pine roots rot in waterlogged soil.
 - **Drought:** soil dries 3 times faster and the air is about 7°C hotter.
 - **Windstorm:** damages cherry and maple trees badly and juniper slightly. Pines are unharmed.
+
+## Rare events
+
+Every so often one of two troublemakers shows up: roughly every 15 to 35 in-game days at 1x speed. At higher speeds they come less often in game time, because visitors move at most 4x. You can also bring them in with **Trigger event**.
+
+- **Hellfire Rider:** a skeleton biker with a flaming skull roars along one row of beds and sets every tree in that row on fire, leaving a trail of flames. He can't be stopped, but the fires can.
+  - A burning tree loses 7 health per second. The fire also bakes the soil dry, which makes the Watering module switch that bed's sprinkler on.
+  - A running sprinkler or rain makes the fire burn out much faster. Clicking a burning tree throws water on it and puts the fire out at once.
+  - With the Watering module off, a whole row can burn to the ground. A tree that burns to death is left as black charcoal.
+- **Green Brute:** a huge green brute stomps in from the side and smashes 3 to 5 trees, one after another. Each smash takes 45 health, so a tree that is already hurt can die from one blow. Click him 5 times to calm him down and he leaves early.
 
 ## The four species
 

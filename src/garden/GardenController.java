@@ -135,7 +135,10 @@ public class GardenController {
 
         // a click on a cockroach stomps it instead of watering the plot underneath
         fieldStack.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            if (!paused && critters.stompAt(e.getX(), e.getY())) {
+            if (paused) return;
+            if (critters.pokeAt(e.getX(), e.getY())) {
+                e.consume();
+            } else if (critters.stompAt(e.getX(), e.getY())) {
                 garden.noteStomped();
                 e.consume();
             }
@@ -418,8 +421,12 @@ public class GardenController {
     // ---- what clicking on a plot does ----
 
     public void waterByHand(Plot plot) {
-        plot.water();
-        GardenLog.info(GardenLog.Category.USER, "%s watered by hand (soil now %.0f%%)", plot.getName(), plot.getMoisture());
+        if (plot.water()) {
+            GardenLog.info(GardenLog.Category.USER, "%s: threw water on the fire and put it out (health %.0f%%)",
+                    plot.getName(), plot.getHealth());
+        } else {
+            GardenLog.info(GardenLog.Category.USER, "%s watered by hand (soil now %.0f%%)", plot.getName(), plot.getMoisture());
+        }
     }
 
     public void harvestByHand(Plot plot) {
@@ -467,6 +474,22 @@ public class GardenController {
     private void setWeather(Weather weather) {
         GardenLog.info(GardenLog.Category.USER, "Weather changed by hand to %s", weather.label);
         garden.getWeather().set(weather);
+    }
+
+    @FXML
+    private void onSummonRider() {
+        GardenLog.info(GardenLog.Category.USER, "Summoned a Hellfire Rider");
+        if (!critters.summonRider()) {
+            GardenLog.info(GardenLog.Category.USER, "No Hellfire Rider came (one is already here, or there are no trees)");
+        }
+    }
+
+    @FXML
+    private void onSummonBrute() {
+        GardenLog.info(GardenLog.Category.USER, "Summoned a Green Brute");
+        if (!critters.summonBrute()) {
+            GardenLog.info(GardenLog.Category.USER, "No Green Brute came (one is already here, or there are no trees)");
+        }
     }
 
     @FXML

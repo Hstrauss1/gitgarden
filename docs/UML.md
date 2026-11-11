@@ -49,7 +49,13 @@ flowchart LR
         UC16(["UC16 Replant automatically"])
         UC17(["UC17 Simulate time, weather, growth"])
         UC18(["UC18 Recover from an error"])
+        UC19(["UC19 Fight a fire"])
+        UC20(["UC20 Calm the Green Brute"])
     end
+    Intruders(["🔥 Intruders"])
+    Intruders --- UC19 & UC20
+    Gardener --- UC19 & UC20
+    UC2 -. "«extend»" .-> UC19
 
     Gardener --- UC1 & UC2 & UC3 & UC4 & UC5 & UC6 & UC7 & UC9 & UC10 & UC12
     Evaluator --- UC8 & UC9 & UC11
@@ -107,6 +113,9 @@ classDiagram
         +setSprinkler(on boolean)
         +water()
         +chew(damage double)
+        +ignite(seconds double) boolean
+        +smash(damage double)
+        +isBurning() boolean
         +pollinate(dt double)
         +chop() boolean
         +getState() State
@@ -342,7 +351,7 @@ classDiagram
 
 ## 4. Class diagram: wildlife
 
-`Critters` updates and draws every insect **polymorphically** through the abstract `Bug` methods.
+`Critters` updates and draws every insect and intruder **polymorphically** through the abstract `Bug` methods. The two intruders are drawn as pixel art with `PixelSprite`.
 
 ```mermaid
 classDiagram
@@ -394,6 +403,33 @@ classDiagram
         +getMealName() String
     }
 
+    class HellfireRider {
+        +FIRE_SECONDS = 30$
+        -List~PlotController~ row
+        -List~double[]~ trail
+        -int burned
+        +update(dt, field) boolean
+        +draw(g, time)
+    }
+
+    class GreenBrute {
+        +SMASH_DAMAGE = 45$
+        +POKES_TO_CALM = 5$
+        -Mode mode
+        -PlotController target
+        -int pokes
+        +update(dt, field) boolean
+        +draw(g, time)
+        +isHit(x double, y double) boolean
+        +poke()
+    }
+
+    class PixelSprite {
+        -String[] rows
+        -Map~Character,Color~ palette
+        +draw(g, left, top, pixel, flip)
+    }
+
     class Splat {
         -double x
         -double y
@@ -404,6 +440,12 @@ classDiagram
     Bug <|-- Ladybug
     Bug <|-- Bee
     Bug <|-- Cockroach
+    Bug <|-- HellfireRider
+    Bug <|-- GreenBrute
+    HellfireRider ..> PixelSprite
+    GreenBrute ..> PixelSprite
+    HellfireRider ..> Plot : ignite()
+    GreenBrute ..> Plot : smash()
     Critters "1" *-- "*" Bug
     Critters "1" *-- "*" Splat
     Bee ..> Plot : pollinate()
@@ -550,7 +592,7 @@ stateDiagram-v2
     Growing --> Mature : all glyphs grown
     Mature --> Growing : harvest (by hand, or after 10 s) and replant
 
-    Growing --> Dead : health reaches 0 (wind, rot, frost, pests)
+    Growing --> Dead : health reaches 0 (wind, rot, frost, pests, fire, smashing)
     Wilting --> Dead : health reaches 0 (drought or other damage)
 
     Dead --> Empty : third chop() (by hand, or auto-replanting after 1 day)
@@ -565,6 +607,11 @@ stateDiagram-v2
     note right of Wilting
         Loses 5 health/s, leaves
         brown and drop
+    end note
+    note left of Growing
+        Any living tree can also be burning
+        (Hellfire Rider): -7 health/s until
+        watered, rained on or burned out
     end note
     note right of Dead
         Logged as ALERT with

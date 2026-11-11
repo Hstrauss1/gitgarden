@@ -69,6 +69,12 @@
                     <MenuItem text="Windstorm" onAction="#onWindstorm"/>
                 </items>
             </MenuButton>
+            <MenuButton text="Trigger event" styleClass="weather-menu">
+                <items>
+                    <MenuItem text="Hellfire Rider (sets a row on fire)" onAction="#onSummonRider"/>
+                    <MenuItem text="Green Brute (smashes trees)" onAction="#onSummonBrute"/>
+                </items>
+            </MenuButton>
         </HBox>
       </VBox>
     </top>

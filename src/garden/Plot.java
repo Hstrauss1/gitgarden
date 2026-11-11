@@ -33,6 +33,10 @@ public class Plot {
     private static final double POLLINATION_RATE = 2.0; // extra glyphs per second while a bee visits
     private static final double WATERLOGGED = 95.0;    // rain on soil this wet rots some roots
     public static final int CHOPS_TO_FELL = 3;
+    private static final double FIRE_DAMAGE = 7.0;      // health lost per second while burning
+    private static final double FIRE_DRYING = 10.0;     // fire bakes the soil dry, which wakes the sprinklers
+    private static final double SPRINKLER_DOUSE = 4.0;  // a running sprinkler burns the fire out this much faster
+    private static final double RAIN_DOUSE = 6.0;       // and so does rain
 
     /** EMPTY: a dead tree was chopped down and the bed is waiting to be replanted. */
     public enum State { GROWING, WILTING, MATURE, DEAD, EMPTY }
@@ -53,6 +57,8 @@ public class Plot {
     private double plantedDay;
     private String lastDamage = "unknown causes";
     private boolean wasWilting;
+    private double burning;        // simulated seconds of fire left; 0 = not on fire
+    private boolean charred;       // the tree burned to death
 
     public Plot(String name, double moisture) {
         this.name = name;
@@ -75,6 +81,8 @@ public class Plot {
         this.chops = 0;
         this.wasWilting = false;
         this.sprinklerOn = false;
+        this.burning = 0;
+        this.charred = false;
         GardenLog.info(GardenLog.Category.PLANT, "%s: planted a %s (%d growth steps)", name, species.displayName, glyphs.size());
     }
 
@@ -97,6 +105,9 @@ public class Plot {
             moisture = Math.min(100, moisture + SPRINKLER_RATE * dt);
         }
 
+        if (burning > 0) {
+            burnDown(dt, weather);
+        }
         if (dead || empty) {
             return false;
         }
@@ -109,8 +120,9 @@ public class Plot {
         double wind = weather.windy ? species.windDamage : 0;
         double rot = weather == Weather.RAIN && moisture > WATERLOGGED ? species.rotDamage : 0;
         double frost = temperature < 0 ? species.frostDamage : 0;
-        double[] amounts = {drought, wind, rot, frost};
-        String[] causes = {"drought (dry soil)", "windstorm", "root rot (waterlogged soil)", "frost"};
+        double fire = burning > 0 ? FIRE_DAMAGE : 0;
+        double[] amounts = {drought, wind, rot, frost, fire};
+        String[] causes = {"drought (dry soil)", "windstorm", "root rot (waterlogged soil)", "frost", "fire"};
         for (int i = 0; i < amounts.length; i++) {
             damage += amounts[i];
             if (amounts[i] > worst) {
@@ -148,6 +160,41 @@ public class Plot {
         factor *= season.growth;
         grown = Math.min(glyphs.size(), grown + GROWTH_RATE * factor * dt);
         return false;
+    }
+
+    /** The fire dries the soil and slowly burns out; sprinklers and rain put it out faster. */
+    private void burnDown(double dt, Weather weather) {
+        moisture = Math.max(0, moisture - FIRE_DRYING * dt);
+        double rate = 1;
+        if (sprinklerOn) rate += SPRINKLER_DOUSE;
+        if (weather == Weather.RAIN) rate += RAIN_DOUSE;
+        burning -= rate * dt;
+        if (dead) {
+            // nothing left to burn
+            burning = 0;
+            charred = true;
+        } else if (burning <= 0) {
+            burning = 0;
+            GardenLog.info(GardenLog.Category.PLANT, "%s (%s): the fire is out%s (health %.0f%%)", name, species.displayName,
+                    sprinklerOn ? " thanks to the sprinkler" : weather == Weather.RAIN ? " thanks to the rain" : "", health);
+        }
+    }
+
+    /**
+     * Sets the tree on fire for about {@code seconds} simulated seconds (less with water on it).
+     *
+     * @return true if it caught fire (there is a living tree that wasn't already burning)
+     */
+    public boolean ignite(double seconds) {
+        if (!hasTree() || burning > 0) return false;
+        burning = seconds;
+        GardenLog.alert(GardenLog.Category.PLANT, "%s (%s): ON FIRE (health %.0f%%)", name, species.displayName, health);
+        return true;
+    }
+
+    /** A heavy blow, like a giant fist. */
+    public void smash(double damage) {
+        hurt(damage, "being smashed by the Green Brute");
     }
 
     /** Set by the {@link WateringSystem}. */
@@ -195,9 +242,16 @@ public class Plot {
         return true;
     }
 
-    /** Manual watering, like using the watering can. */
-    public void water() {
+    /**
+     * Manual watering, like using the watering can. A canful also puts out a fire.
+     *
+     * @return true if this put out a fire
+     */
+    public boolean water() {
         moisture = Math.min(100, moisture + MANUAL_WATER);
+        if (burning <= 0) return false;
+        burning = 0;
+        return true;
     }
 
     public State getState() {
@@ -209,6 +263,7 @@ public class Plot {
     }
 
     public String getStatusText() {
+        if (burning > 0) return String.format("ON FIRE! Click to throw water on it. Health %.0f%%", health);
         switch (getState()) {
             case MATURE:
                 return String.format("Ready to harvest (auto in %.0fs)", Math.max(0, HARVEST_AFTER - matureTime));
@@ -237,6 +292,9 @@ public class Plot {
     public boolean hasTree() { return !dead && !empty; }
     public double getPlantedDay() { return plantedDay; }
     public String getLastDamage() { return lastDamage; }
+    public boolean isBurning() { return burning > 0; }
+    /** The tree burned to death; it's drawn as charcoal. */
+    public boolean isCharred() { return charred; }
 
     public double getProgress() {
         return glyphs.isEmpty() ? 1 : grown / glyphs.size();

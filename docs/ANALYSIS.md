@@ -59,6 +59,8 @@ The garden is not hardcoded to survive. If its subsystems are switched off, or o
 | F20 | The log writes a daily report at the end of every in-game day. |
 | F21 | An in-app help window shows the user manual. |
 | F22 | Trees left at MATURE are harvested automatically after 10 s, and a new tree is planted. |
+| F23 | **Rare events:** a Hellfire Rider occasionally rides along one row and sets its trees on fire. A burning tree loses 7 health/s and its soil dries fast; sprinklers, rain or a click of water put the fire out. |
+| F24 | **Rare events:** a Green Brute occasionally smashes 3-5 trees (45 health each). The gardener can calm him with 5 clicks. Both events can also be triggered from the menu. |
 
 ### 2.2 Non-functional requirements
 
@@ -84,6 +86,7 @@ The garden is not hardcoded to survive. If its subsystems are switched off, or o
 | **Game clock** | Secondary, system | Drives time forward. It starts the automatic use cases on every simulation step. |
 | **Environment** | Secondary, system | The weather and temperature, which act on the plots. |
 | **Wildlife** | Secondary, system | Bees, ladybugs and cockroaches moving on the field. |
+| **Intruders** | Secondary, system | The Hellfire Rider and the Green Brute, who turn up now and then and damage trees. |
 | **Monitoring API** | Future, external | Will read the garden's state. It is to be specified by the course. |
 
 ---
@@ -112,6 +115,8 @@ The garden is not hardcoded to survive. If its subsystems are switched off, or o
 | UC16 | Replant automatically | Game clock (Replanting module) |
 | UC17 | Simulate time, weather and growth | Game clock |
 | UC18 | Recover from an error | System |
+| UC19 | Fight a fire (Hellfire Rider) | Gardener / Watering module |
+| UC20 | Calm the Green Brute | Gardener |
 
 ### 4.2 Detailed use cases
 
@@ -281,6 +286,28 @@ The garden is not hardcoded to survive. If its subsystems are switched off, or o
   4. The rest of the step continues. The next frame runs normally.
 - **Alternative:** 1a. The exception happens outside any guard (for example, on another thread): the default uncaught-exception handler logs it the same way.
 
+#### UC19: Fight a fire
+
+- **Actors:** Hellfire Rider (trigger), Watering module, Gardener
+- **Main flow:**
+  1. The rider enters at one end of a row and rides across. Each tree he passes catches fire (logged ALERT PLANT `ON FIRE`).
+  2. Each burning tree loses 7 health/s, and its soil dries 10%/s.
+  3. When the soil drops below 30%, the Watering module turns that bed's sprinkler on, which makes the fire burn out five times faster.
+  4. The fire goes out, and the system logs `the fire is out thanks to the sprinkler`.
+- **Alternatives:**
+  - 3a. The gardener clicks the burning tree: the water puts the fire out at once (logged USER).
+  - 3b. It is raining: the fire burns out seven times faster.
+  - 3c. The Watering module is off and nobody helps: the tree burns to death (`DIED from fire`) and is drawn as charcoal.
+
+#### UC20: Calm the Green Brute
+
+- **Actors:** Green Brute (trigger), Gardener
+- **Main flow:**
+  1. The brute enters from the side (logged ALERT INTRUDER), walks to a living tree and smashes it, taking 45 health (logged WARN INTRUDER).
+  2. He repeats this for 3-5 trees, then leaves.
+  3. The gardener clicks him. Each poke is logged as USER. On the fifth poke he calms down and leaves early.
+- **Postcondition:** smashed trees heal at the normal recovery rate if nothing else is hurting them.
+
 ---
 
 ## 5. User stories
@@ -301,6 +328,8 @@ The garden is not hardcoded to survive. If its subsystems are switched off, or o
 | US12 | gardener | different species with different strengths | my choices and the weather matter | In a windstorm cherry and maple lose health while pine doesn't; in frost, pine and juniper hardly suffer. |
 | US13 | new user | an in-app manual | I can learn the controls without leaving the app | The Help button opens a window that lists every control, module and log feature. |
 | US14 | gardener | to force the weather | I can see how the garden copes | Choosing an event starts it at once and logs it. |
+| US15 | gardener | surprise disasters | the garden stays exciting and I have to react | At 1x speed a Hellfire Rider or Green Brute turns up every 15-35 in-game days; both can be triggered from the menu. |
+| US16 | gardener | to put out fires | I can save a row the rider set alight | Clicking a burning tree puts the fire out; sprinklers and rain also put fires out. |
 
 ---
 
@@ -368,6 +397,8 @@ The nouns in the problem statement and use cases became these classes. The verbs
 | replanting | `ReplantingSystem` | Clearing dead trees and replanting | Plot, Garden |
 | sensor | `Sensor` (interface), `MoistureSensor`, `TemperatureSensor`, `PestSensor` | Noisy readings | Plot, Garden, Critters |
 | insect | `Bug` (abstract), `Ladybug`, `Bee`, `Cockroach` | Movement, drawing, pollinating and eating | Critters, PlotController |
+| intruder | `HellfireRider`, `GreenBrute` (both extend `Bug`) | Riding a row and igniting it; walking to trees and smashing them; being poked | Critters, Plot, PlotController |
+| pixel art | `PixelSprite` | Drawing a character grid as square pixels, optionally mirrored | — |
 | wildlife | `Critters` | Spawning, updating and drawing insects; stomping and spraying | Bug, PlotController |
 | log | `GardenLog`, `GardenLog.Entry`, `Level`, `Category` | Recording, file output, rotation and the in-memory list | GameClock |
 | user interface | `GardenApp`, `GardenController`, `PlotController`, `HelpWindow`, `Irrigation`, `WeatherView`, `GrassTexture` | Window, input, drawing | Garden and the model classes |
@@ -394,6 +425,7 @@ The nouns in the problem statement and use cases became these classes. The verbs
 | F5 | `GameClock`, `GameClock.Season` |
 | F6, F7 | `WeatherSystem`, `Weather`, `Garden.getAirTemperature` |
 | F8, F9 | `Critters`, `Bug`, `Ladybug`, `Bee`, `Cockroach` |
+| F23, F24 | `HellfireRider`, `GreenBrute`, `PixelSprite`, `Plot.ignite` / `smash`, `Critters.summonRider` / `summonBrute` / `pokeAt` |
 | F10 | `Pipe`, `Spigot`, `Irrigation` |
 | F11 | `WateringSystem`, `MoistureSensor` |
 | F12 | `HeatingSystem`, `TemperatureSensor` |

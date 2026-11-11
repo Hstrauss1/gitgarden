@@ -40,6 +40,15 @@ public class PlotController {
     private static final Color DRY_LEAF = Color.web("#a8783c");
     private static final Color DEAD_WOOD = Color.web("#9a9088");
     private static final Color DEAD_WOOD_DARK = Color.web("#6e655e");
+    private static final Color CHARCOAL = Color.web("#3a302b");
+    private static final Color CHARCOAL_DARK = Color.web("#1f1916");
+    /** Flame pixels from the base up: white-hot, yellow, orange, red. */
+    private static final Color[] FLAME = {
+        Color.web("#fff6c2"), Color.web("#ffd23f"), Color.web("#ff8c1a"), Color.web("#e8401c"), Color.web("#a8231a")
+    };
+    private static final Color SMOKE = Color.web("#5a5550");
+    private static final Color EMBER_GLOW = Color.web("#ff6a00", 0.22);
+    private static final double FIRE_PIXEL = 2;
     /** Below this health, leaves start falling off. */
     private static final double LEAF_DROP_BELOW = 60;
 
@@ -68,6 +77,11 @@ public class PlotController {
     }
 
     public StackPane getRoot() { return root; }
+
+    /** Jolts the tree, as if something just hit it. */
+    public void shake() {
+        lastChop = System.nanoTime();
+    }
     public Plot getPlot() { return plot; }
 
     public void bind(Plot plot, GardenController garden) {
@@ -127,7 +141,10 @@ public class PlotController {
         if (sinceChop < CHOP_SHAKE * 1.6) {
             drawWoodChips(g, sinceChop / (CHOP_SHAKE * 1.6));
         }
-        if (plot.getState() == Plot.State.MATURE) {
+        if (plot.isBurning()) {
+            drawFire(g, time);
+        }
+        if (plot.getState() == Plot.State.MATURE && !plot.isBurning()) {
             drawSparkle(g, nanos);
         }
     }
@@ -229,8 +246,8 @@ public class PlotController {
         Color leafDark = Color.web(species.leafDark);
         boolean dead = plot.getState() == Plot.State.DEAD;
         if (dead) {
-            trunkBright = DEAD_WOOD;
-            trunkDark = DEAD_WOOD_DARK;
+            trunkBright = plot.isCharred() ? CHARCOAL : DEAD_WOOD;
+            trunkDark = plot.isCharred() ? CHARCOAL_DARK : DEAD_WOOD_DARK;
         }
 
         // leaves turn brown as health drops, then start falling off
@@ -288,6 +305,58 @@ public class PlotController {
                 }
             }
         }
+    }
+
+    /**
+     * Pixel flames licking up from the tree's branches and leaves, a glow on the bed,
+     * and puffs of smoke drifting up from the top. Redrawn 12 times a second so it flickers.
+     */
+    private void drawFire(GraphicsContext g, double time) {
+        int frame = (int) (time * 12);
+        double cx = Plot.START_X * CELL_W + CELL_W / 2;
+        g.setFill(EMBER_GLOW);
+        g.fillOval(cx - 22, BED_TOP - 4, 44, 16);
+
+        int top = Plot.ROWS;
+        for (int row = 0; row < Plot.ROWS; row++) {
+            for (int col = 0; col < Plot.COLS; col++) {
+                if (cells[row][col] == ' ') continue;
+                top = Math.min(top, row);
+                long h = mix(row * 31 + col, frame);
+                if ((h & 3) != 0) continue;   // about a quarter of the cells are burning at any moment
+                double x = col * CELL_W + ((h >>> 2) & 1) * FIRE_PIXEL;
+                double y = (row + 1) * CELL_H - FIRE_PIXEL * 2;
+                int height = 2 + (int) ((h >>> 4) % 4);
+                for (int k = 0; k < height; k++) {
+                    int shade = Math.min(FLAME.length - 1, k + (int) ((h >>> 8) & 1));
+                    double drift = k >= 2 ? ((h >>> (10 + k)) & 1) * FIRE_PIXEL - FIRE_PIXEL / 2 : 0;
+                    g.setFill(FLAME[shade]);
+                    g.fillRect(x + drift, y - k * FIRE_PIXEL, FIRE_PIXEL, FIRE_PIXEL);
+                }
+            }
+        }
+        if (top == Plot.ROWS) top = Plot.START_Y - 2;   // nothing visible yet: flames at the base
+
+        // smoke rises from the top of the tree and fades
+        for (int i = 0; i < 6; i++) {
+            double t = (time * 0.8 + i / 6.0) % 1.0;
+            long h = mix(i, (long) (time * 0.8 + i / 6.0));
+            double x = cx - 10 + (h & 15) * 1.3 + Math.sin(time * 2 + i) * 2;
+            double y = top * CELL_H - 2 - t * 26;
+            double size = FIRE_PIXEL * (1 + t * 2);
+            g.setGlobalAlpha(0.55 * (1 - t));
+            g.setFill(SMOKE);
+            g.fillRect(Math.round(x / 2) * 2, Math.round(y / 2) * 2, size, size);
+        }
+        g.setGlobalAlpha(1);
+    }
+
+    /** A cheap, repeatable scramble of two numbers (for flicker that looks random). */
+    private static long mix(long a, long b) {
+        long h = (a * 0x9E3779B97F4A7C15L) ^ (b * 0xC2B2AE3D27D4EB4FL);
+        h ^= h >>> 29;
+        h *= 0xBF58476D1CE4E5B9L;
+        return h ^ (h >>> 32);
     }
 
     /** A bobbing star above the tree, like a crop that's ready. */
