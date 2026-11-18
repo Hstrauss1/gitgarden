@@ -4,3 +4,7 @@ logs/
 .DS_Store
 .idea/
 *.iml
+out-test/
+lib/
+runs/
+log.txt

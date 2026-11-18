@@ -1,0 +1,8 @@
+{
+  "plants": [
+    { "name": "Juniper", "amount": 10 },
+    { "name": "Cherry Blossom", "amount": 10 },
+    { "name": "Japanese Maple", "amount": 10 },
+    { "name": "Pine", "amount": 10 }
+  ]
+}

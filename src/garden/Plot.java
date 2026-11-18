@@ -29,7 +29,7 @@ public class Plot {
     private static final double HARVEST_AFTER = 10.0;  // seconds a grown tree waits before auto-harvest
     private static final double MANUAL_WATER = 35.0;
     private static final double WILT_DAMAGE = 5.0;     // health lost per second in dry soil
-    private static final double RECOVERY = 2.0;        // health regained per second once watered
+    public static final double RECOVERY = 2.0;         // health regained per second once watered
     private static final double POLLINATION_RATE = 2.0; // extra glyphs per second while a bee visits
     private static final double WATERLOGGED = 95.0;    // rain on soil this wet rots some roots
     public static final int CHOPS_TO_FELL = 3;
@@ -37,6 +37,8 @@ public class Plot {
     private static final double FIRE_DRYING = 10.0;     // fire bakes the soil dry, which wakes the sprinklers
     private static final double SPRINKLER_DOUSE = 4.0;  // a running sprinkler burns the fire out this much faster
     private static final double RAIN_DOUSE = 6.0;       // and so does rain
+    /** Above this bed temperature (°C, = 104°F) trees suffer heat stress. The GUI's climate never gets this hot. */
+    public static final double HEAT_LIMIT = 40.0;
 
     /** EMPTY: a dead tree was chopped down and the bed is waiting to be replanted. */
     public enum State { GROWING, WILTING, MATURE, DEAD, EMPTY }
@@ -59,6 +61,8 @@ public class Plot {
     private boolean wasWilting;
     private double burning;        // simulated seconds of fire left; 0 = not on fire
     private boolean charred;       // the tree burned to death
+    private double recoveryRate = RECOVERY;
+    private boolean parasitesFed;   // a parasite fed since the last tick, so no healing this tick
 
     public Plot(String name, double moisture) {
         this.name = name;
@@ -96,11 +100,20 @@ public class Plot {
      * @return true when the tree should be auto-harvested
      */
     public boolean tick(double dt, Weather weather, GameClock.Season season, double temperature) {
+        return tick(dt, weather, season, temperature, weather.rainfall);
+    }
+
+    /**
+     * Same as {@link #tick(double, Weather, GameClock.Season, double)}, but with the rain that
+     * falls this tick given explicitly ({@code rainfall} moisture per second) instead of taken
+     * from the weather. The API uses this: its rain arrives as one measured soaking.
+     */
+    public boolean tick(double dt, Weather weather, GameClock.Season season, double temperature, double rainfall) {
         // soil dries out (faster in a drought, and some species are thirstier than others)
         double drain = DRAIN_RATE * weather.drainMultiplier * season.drain;
         if (weather == Weather.DROUGHT) drain *= species.droughtFactor;
         moisture = Math.max(0, moisture - drain * dt);
-        moisture = Math.min(100, moisture + weather.rainfall * dt);
+        moisture = Math.min(100, moisture + rainfall * dt);
         if (sprinklerOn) {
             moisture = Math.min(100, moisture + SPRINKLER_RATE * dt);
         }
@@ -121,8 +134,9 @@ public class Plot {
         double rot = weather == Weather.RAIN && moisture > WATERLOGGED ? species.rotDamage : 0;
         double frost = temperature < 0 ? species.frostDamage : 0;
         double fire = burning > 0 ? FIRE_DAMAGE : 0;
-        double[] amounts = {drought, wind, rot, frost, fire};
-        String[] causes = {"drought (dry soil)", "windstorm", "root rot (waterlogged soil)", "frost", "fire"};
+        double heat = temperature > HEAT_LIMIT ? species.heatDamage : 0;
+        double[] amounts = {drought, wind, rot, frost, fire, heat};
+        String[] causes = {"drought (dry soil)", "windstorm", "root rot (waterlogged soil)", "frost", "fire", "heat stress"};
         for (int i = 0; i < amounts.length; i++) {
             damage += amounts[i];
             if (amounts[i] > worst) {
@@ -132,9 +146,10 @@ public class Plot {
         }
         if (damage > 0) {
             hurt(damage * dt, cause);
-        } else {
-            health = Math.min(100, health + RECOVERY * dt);
+        } else if (!parasitesFed) {
+            health = Math.min(100, health + recoveryRate * dt);
         }
+        parasitesFed = false;
 
         boolean wilting = moisture < WILT_BELOW && !dead;
         if (wilting != wasWilting) {
@@ -213,6 +228,33 @@ public class Plot {
     public void chew(double damage) {
         hurt(damage, "cockroach");
     }
+
+    /** A parasite infestation feeding on the tree (API runs). */
+    public void parasiteDamage(double damage, String parasite) {
+        if (damage <= 0) return;
+        parasitesFed = true;
+        hurt(damage, parasite);
+    }
+
+    /** Rain soaking into the bed all at once, in moisture percentage points. */
+    public void soak(double amount) {
+        if (amount > 0) moisture = Math.min(100, moisture + amount);
+    }
+
+    /** Water let out through a drain, in moisture percentage points. */
+    public void drainWater(double amount) {
+        if (amount > 0) moisture = Math.max(0, moisture - amount);
+    }
+
+    /**
+     * Health regained per simulated second while nothing is hurting the tree. The default
+     * ({@value #RECOVERY}/s, i.e. 20 a day) suits the GUI; API runs may slow it down.
+     */
+    public void setRecoveryRate(double perSecond) {
+        recoveryRate = Math.max(0, perSecond);
+    }
+
+    public double getRecoveryRate() { return recoveryRate; }
 
     private void hurt(double damage, String cause) {
         if (dead || empty) return;

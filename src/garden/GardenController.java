@@ -8,7 +8,10 @@ import java.util.Random;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.HostServices;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -50,6 +53,8 @@ public class GardenController {
     private static final int MAX_SPEED_FOR_NIGHT = 4;
     /** Seconds between refreshes of the text in the sidebar and status bar. */
     private static final double TEXT_REFRESH = 0.25;
+    /** The Log tab keeps this many recent entries; the log file keeps everything. */
+    private static final int LOG_MEMORY_LIMIT = 5000;
 
     @FXML private StackPane lawn;
     @FXML private TilePane plotPane;
@@ -85,6 +90,7 @@ public class GardenController {
     private final List<Label> moduleStatus = new ArrayList<Label>();
     private final Critters critters = new Critters(plotViews);
     private PestSensor pestSensor;
+    private final ObservableList<GardenLog.Entry> recentLog = FXCollections.observableArrayList();
     private FilteredList<GardenLog.Entry> filteredLog;
     private HostServices hostServices;
 
@@ -97,6 +103,7 @@ public class GardenController {
 
     @FXML
     private void initialize() {
+        GardenLog.setListener(this::showInLogTab);
         GardenLog.start(garden.getClock());
         garden.setCritters(critters);
         pestSensor = new PestSensor(garden);
@@ -263,7 +270,7 @@ public class GardenController {
         logLevel.getItems().addAll("All levels", "WARN and worse", "ALERT and worse", "ERROR only");
         logLevel.getSelectionModel().selectFirst();
 
-        filteredLog = new FilteredList<GardenLog.Entry>(GardenLog.getRecent());
+        filteredLog = new FilteredList<GardenLog.Entry>(recentLog);
         logList.setItems(filteredLog);
         // a fixed row height keeps the list fast while thousands of entries stream in
         logList.setFixedCellSize(52);
@@ -275,6 +282,26 @@ public class GardenController {
         filteredLog.addListener((ListChangeListener<GardenLog.Entry>) change -> logChanged = true);
         logFileLabel.setText(GardenLog.getCurrentFile() == null ? "Log file unavailable (memory only)"
                 : "Full log: " + GardenLog.getCurrentFile().getAbsolutePath());
+    }
+
+    /** Called for every log entry; the list may only be changed on the JavaFX thread. */
+    private void showInLogTab(GardenLog.Entry entry) {
+        if (Platform.isFxApplicationThread()) {
+            rememberLogEntry(entry);
+            return;
+        }
+        try {
+            Platform.runLater(() -> rememberLogEntry(entry));
+        } catch (IllegalStateException toolkitNotRunning) {
+            // no UI yet (or any more); the file still has it
+        }
+    }
+
+    private void rememberLogEntry(GardenLog.Entry entry) {
+        recentLog.add(entry);
+        if (recentLog.size() > LOG_MEMORY_LIMIT) {
+            recentLog.remove(0, recentLog.size() - LOG_MEMORY_LIMIT);
+        }
     }
 
     private void refilterLog() {
@@ -415,7 +442,7 @@ public class GardenController {
             logList.scrollTo(filteredLog.size() - 1);
         }
         logChanged = false;
-        logCountLabel.setText(String.format("Showing %d of the last %d entries", filteredLog.size(), GardenLog.getRecent().size()));
+        logCountLabel.setText(String.format("Showing %d of the last %d entries", filteredLog.size(), recentLog.size()));
     }
 
     // ---- what clicking on a plot does ----
@@ -508,7 +535,7 @@ public class GardenController {
 
     public void shutdown() {
         if (timer != null) timer.stop();
-        GardenLog.info(GardenLog.Category.SYSTEM, "Garden closed");
         GardenLog.stop();
+        GardenLog.setListener(null);
     }
 }

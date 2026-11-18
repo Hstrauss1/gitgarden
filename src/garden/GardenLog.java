@@ -9,13 +9,10 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
 /**
- * The garden's log: every event goes both to a plain-text file in {@code logs/} and to
- * an in-memory list that the Log tab shows. Each line has fixed-width columns:
+ * The garden's log: every event goes to a plain-text file in {@code logs/} and to an
+ * optional {@link Listener} (the GUI's Log tab, or the API's log.txt). This class has
+ * no JavaFX dependency, so the model and the API also run without the GUI. Each line has fixed-width columns:
  *
  * <pre>
  * [real date and time] [in-game date] LEVEL CATEGORY  message
@@ -70,12 +67,14 @@ public final class GardenLog {
         }
     }
 
-    /** The Log tab keeps this many recent entries; the file keeps everything. */
-    public static final int MEMORY_LIMIT = 5000;
+    /** Receives every entry as it is logged, on whichever thread logged it. */
+    public interface Listener {
+        void entryAdded(Entry entry);
+    }
+
     /** Start a new file part after this many bytes so no single file gets huge. */
     private static final long MAX_FILE_BYTES = 20L * 1024 * 1024;
 
-    private static final ObservableList<Entry> RECENT = FXCollections.observableArrayList();
     private static final SimpleDateFormat REAL_TIME = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final SimpleDateFormat FILE_STAMP = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 
@@ -87,6 +86,7 @@ public final class GardenLog {
     private static long bytesWritten;
     private static int part = 1;
     private static int errorCount;
+    private static volatile Listener listener;
 
     private GardenLog() {
     }
@@ -113,7 +113,7 @@ public final class GardenLog {
     }
 
     /** Logs a caught exception with where it happened, so it can be traced afterwards. */
-    public static void error(Category category, String where, Throwable problem) {
+    public static synchronized void error(Category category, String where, Throwable problem) {
         errorCount++;
         StackTraceElement[] trace = problem.getStackTrace();
         String at = trace.length > 0 ? " at " + trace[0] : "";
@@ -130,15 +130,20 @@ public final class GardenLog {
         final Entry entry = new Entry(REAL_TIME.format(new Date()), gameTime(), level, category, message);
         write(entry.toLine());
 
-        if (Platform.isFxApplicationThread()) {
-            remember(entry);
-        } else {
+        Listener current = listener;
+        if (current != null) {
             try {
-                Platform.runLater(() -> remember(entry));
-            } catch (IllegalStateException toolkitNotRunning) {
-                // no UI yet (or any more); the file still has it
+                current.entryAdded(entry);
+            } catch (RuntimeException listenerProblem) {
+                // a broken listener must never stop the garden; the file still has the entry
+                System.err.println("Garden log listener failed: " + listenerProblem);
             }
         }
+    }
+
+    /** Sends every future entry to {@code newListener} as well (null to stop). */
+    public static void setListener(Listener newListener) {
+        listener = newListener;
     }
 
     /** A divider line in the file, used for daily reports so the log is easy to skim. */
@@ -168,17 +173,9 @@ public final class GardenLog {
         out = null;
     }
 
-    public static ObservableList<Entry> getRecent() { return RECENT; }
     public static File getCurrentFile() { return currentFile; }
     public static File getDirectory() { return directory; }
     public static int getErrorCount() { return errorCount; }
-
-    private static void remember(Entry entry) {
-        RECENT.add(entry);
-        if (RECENT.size() > MEMORY_LIMIT) {
-            RECENT.remove(0, RECENT.size() - MEMORY_LIMIT);
-        }
-    }
 
     private static String gameTime() {
         if (clock == null) return "----------------------";

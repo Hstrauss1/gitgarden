@@ -27,6 +27,8 @@ or you can chop and replant it sooner yourself.
 
 The **Help** button opens the full user manual ([docs/USER_MANUAL.md](docs/USER_MANUAL.md)).
 
+The scripted **Garden Simulation API** (no GUI, logs to `log.txt`) is described in [docs/API.md](docs/API.md).
+
 Requirements, use cases, user stories and scenarios are in [docs/ANALYSIS.md](docs/ANALYSIS.md). The UML (use case, class, state, sequence and activity diagrams) is in [docs/UML.md](docs/UML.md).
 
 ## Automated modules
@@ -112,9 +114,12 @@ JavaFX is not bundled with Amazon Corretto 8. A JDK with JavaFX built in
 
 ```bash
 mkdir -p out/garden && cp src/garden/*.fxml src/garden/*.css src/garden/*.md out/garden/
-~/.jdks/liberica-full-21/bin/javac -d out src/garden/*.java
+~/.jdks/liberica-full-21/bin/javac -d out $(find src -name '*.java')
 ~/.jdks/liberica-full-21/bin/java -cp out garden.GardenApp
 ```
+
+`scripts/test.sh` builds everything and runs the JUnit tests; `java -cp out GardenSimulator` runs the
+API test script (see [docs/API.md](docs/API.md)).
 
 In IntelliJ: Project Structure → SDKs → add `~/.jdks/liberica-full-21` and use it for this project.
 No extra VM options are needed with that JDK.
