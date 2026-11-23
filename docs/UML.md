@@ -713,6 +713,7 @@ classDiagram
         REPLANT
         PLANT
         WILDLIFE
+        INTRUDER
         USER
     }
 
