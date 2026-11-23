@@ -109,20 +109,21 @@ Months 1-3 are spring, 4-6 summer, 7-9 autumn and 10-12 winter.
 
 ## Running
 
-JavaFX is not bundled with Amazon Corretto 8. A JDK with JavaFX built in
-(BellSoft Liberica JDK 21 "Full") is installed at `~/.jdks/liberica-full-21`. From this folder:
+You need **Java 21 with JavaFX 21**. Step-by-step instructions for macOS, Linux, Windows and IntelliJ are in
+the user manual, under [Installing and running](docs/USER_MANUAL.md#installing-and-running). With a JDK that
+includes JavaFX (for example BellSoft Liberica JDK 21 "Full" or Azul Zulu 21 "JDK FX"), from this folder:
 
 ```bash
 mkdir -p out/garden && cp src/garden/*.fxml src/garden/*.css src/garden/*.md out/garden/
-~/.jdks/liberica-full-21/bin/javac -d out $(find src -name '*.java')
-~/.jdks/liberica-full-21/bin/java -cp out garden.GardenApp
+javac -d out $(find src -name '*.java')
+java -cp out garden.GardenApp
 ```
 
 `scripts/test.sh` builds everything and runs the JUnit tests; `java -cp out GardenSimulator` runs the
 API test script (see [docs/API.md](docs/API.md)).
 
-In IntelliJ: Project Structure → SDKs → add `~/.jdks/liberica-full-21` and use it for this project.
-No extra VM options are needed with that JDK.
+In IntelliJ: set the project SDK to a JDK 21 that includes JavaFX, mark `src` as a Sources Root, and run
+`garden.GardenApp`. No extra VM options are needed with such a JDK.
 
 ## References
 

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -43,13 +44,38 @@ public final class HelpWindow {
         stage.toFront();
     }
 
+    /** A Markdown link, [text](target); the help window shows only the text. */
+    private static final Pattern LINK = Pattern.compile("\\[([^\\]]+)\\]\\(([^)]+)\\)");
+
+    /**
+     * Turns the manual's Markdown into labels. It understands headings (#, ##, ###), "- " bullets,
+     * ``` code blocks, **bold** and `code`; links show their text, and images are skipped because
+     * they are only for the copy of the manual in docs/.
+     */
     private static VBox build() {
         VBox page = new VBox(6);
         page.getStyleClass().add("help-page");
+        boolean inCode = false;
         for (String line : readManual().split("\n")) {
             String trimmed = line.trim();
-            if (trimmed.isEmpty()) continue;
-            if (trimmed.startsWith("## ")) {
+            if (trimmed.startsWith("```")) {
+                inCode = !inCode;
+                continue;
+            }
+            if (inCode) {
+                if (trimmed.isEmpty()) continue;
+                Text code = new Text(line.replaceAll("\\s+$", ""));
+                code.getStyleClass().add("help-code");
+                TextFlow flow = new TextFlow(code);
+                flow.getStyleClass().add("help-code-block");
+                page.getChildren().add(flow);
+                continue;
+            }
+            if (trimmed.isEmpty() || trimmed.startsWith("![")) continue;
+            trimmed = LINK.matcher(trimmed).replaceAll("$1");
+            if (trimmed.startsWith("### ")) {
+                page.getChildren().add(styled(new Label(trimmed.substring(4)), "help-h3"));
+            } else if (trimmed.startsWith("## ")) {
                 page.getChildren().add(styled(new Label(trimmed.substring(3)), "help-h2"));
             } else if (trimmed.startsWith("# ")) {
                 page.getChildren().add(styled(new Label(trimmed.substring(2)), "help-h1"));
