@@ -30,13 +30,13 @@ public class PestSensor implements Sensor {
         return "pests";
     }
 
-    /** Cockroaches currently eating a tree. */
-    public List<Cockroach> detect() {
-        List<Cockroach> feeding = new ArrayList<Cockroach>();
-        Critters critters = garden.getCritters();
-        if (critters == null) return feeding;
-        for (Cockroach roach : critters.getRoaches()) {
-            if (roach.isEating()) feeding.add(roach);
+    /** Pests currently eating a tree. */
+    public List<Pest> detect() {
+        List<Pest> feeding = new ArrayList<Pest>();
+        Wildlife wildlife = garden.getWildlife();
+        if (wildlife == null) return feeding;
+        for (Pest pest : wildlife.getPests()) {
+            if (pest.isEating()) feeding.add(pest);
         }
         return feeding;
     }

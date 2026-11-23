@@ -105,7 +105,7 @@ public class GardenController {
     private void initialize() {
         GardenLog.setListener(this::showInLogTab);
         GardenLog.start(garden.getClock());
-        garden.setCritters(critters);
+        garden.setWildlife(critters);
         pestSensor = new PestSensor(garden);
 
         for (int speed : SPEEDS) {

@@ -25,7 +25,7 @@ public final class Garden {
     private final ReplantingSystem replanting = new ReplantingSystem();
     private final List<GardenModule> modules = new ArrayList<GardenModule>();
 
-    private Critters critters;
+    private Wildlife wildlife;
     private int baseLife = 16;
     private int baseMultiplier = 3;
 
@@ -230,8 +230,9 @@ public final class Garden {
     public WateringSystem getWatering() { return watering; }
     public HeatingSystem getHeating() { return heating; }
     public PestControlSystem getPestControl() { return pestControl; }
-    public Critters getCritters() { return critters; }
-    public void setCritters(Critters critters) { this.critters = critters; }
+    /** The creatures on the field, or null when there are none (an API run). */
+    public Wildlife getWildlife() { return wildlife; }
+    public void setWildlife(Wildlife wildlife) { this.wildlife = wildlife; }
     public void setBaseLife(int life) { baseLife = life; }
     public void setBaseMultiplier(int multiplier) { baseMultiplier = multiplier; }
     public int getHarvested() { return harvested; }

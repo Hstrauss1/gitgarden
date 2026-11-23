@@ -9,7 +9,7 @@ import javafx.scene.paint.Color;
  * Sneaks in from the fence, skitters to a tree and eats it, draining its health.
  * If the tree dies it moves on to another. Click it to stomp it.
  */
-public class Cockroach extends Bug {
+public class Cockroach extends Bug implements Pest {
 
     private static final double SPEED = 55;
     private static final double EAT_RATE = 6;       // tree health eaten per second
@@ -65,12 +65,15 @@ public class Cockroach extends Bug {
         return true;
     }
 
+    @Override
     public boolean isEating() { return eating && meal != null && meal.getPlot().hasTree(); }
 
+    @Override
     public String getMealName() {
         return meal == null ? "nothing" : meal.getPlot().getName() + " (" + meal.getPlot().getSpecies().displayName + ")";
     }
 
+    @Override
     public double getMealHealth() { return meal == null ? 0 : meal.getPlot().getHealth(); }
 
     private void goEat(PlotController plot, Critters field) {

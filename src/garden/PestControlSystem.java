@@ -20,7 +20,7 @@ public class PestControlSystem extends GardenModule {
     private static final double REFILL_PER_SECOND = 0.6;
 
     private final PestSensor sensor;
-    private final Map<Cockroach, Double> watching = new HashMap<Cockroach, Double>();
+    private final Map<Pest, Double> watching = new HashMap<Pest, Double>();
     private double tank = TANK_SIZE;
     private int killed;
     private boolean warnedEmpty;
@@ -36,13 +36,13 @@ public class PestControlSystem extends GardenModule {
         tank = Math.min(TANK_SIZE, tank + REFILL_PER_SECOND * dt);
         if (tank >= DOSE) warnedEmpty = false;
 
-        List<Cockroach> feeding = sensor.detect();
+        List<Pest> feeding = sensor.detect();
         // forget roaches that left, died or were stomped
-        for (Iterator<Cockroach> it = watching.keySet().iterator(); it.hasNext(); ) {
+        for (Iterator<Pest> it = watching.keySet().iterator(); it.hasNext(); ) {
             if (!feeding.contains(it.next())) it.remove();
         }
 
-        for (Cockroach roach : feeding) {
+        for (Pest roach : feeding) {
             Double seen = watching.get(roach);
             if (seen == null) {
                 watching.put(roach, 0.0);
@@ -58,7 +58,8 @@ public class PestControlSystem extends GardenModule {
                 tank -= DOSE;
                 killed++;
                 watching.remove(roach);
-                garden.getCritters().exterminate(roach);
+                Wildlife wildlife = garden.getWildlife();
+                if (wildlife != null) wildlife.exterminate(roach);
                 GardenLog.info(getCategory(), "Pesticide sprayed on %s: cockroach killed (tank %.0f%%)",
                         roach.getMealName(), tank / TANK_SIZE * 100);
             } else if (!warnedEmpty) {

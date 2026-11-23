@@ -5,6 +5,7 @@ logs/
 .idea/
 *.iml
 out-test/
+out-api/
 lib/
 runs/
 log.txt

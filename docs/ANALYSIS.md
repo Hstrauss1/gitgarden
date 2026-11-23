@@ -89,6 +89,7 @@ The garden is not hardcoded to survive. If its subsystems are switched off, or o
 | NF9 | **API robustness:** no API method ever throws. Odd input is logged as WARN and handled (negative rain counts as 0 mm, an unknown parasite infests nothing), caught exceptions are logged as ERROR, and a call made before `initializeGarden()` initializes the garden first. |
 | NF10 | **Relative paths:** `log.txt`, `garden-config.json` and the GUI's `logs/` folder are all found relative to the working directory. No path is absolute. |
 | NF11 | **API honesty:** with the API's modules switched off, plants die: untreated parasites kill a plant in about 3½ days (checked by the unit tests). |
+| NF12 | **Standalone API:** as the API document requires, the API and the model it uses compile and run on a plain JDK 21 with no JavaFX. |
 
 ---
 
@@ -569,6 +570,7 @@ The nouns in the problem statement and use cases became these classes. The verbs
 | intruder | `HellfireRider`, `GreenBrute` (both extend `Bug`) | Riding a row and igniting it; walking to trees and smashing them; being poked | Critters, Plot, PlotController |
 | pixel art | `PixelSprite` | Drawing a character grid as square pixels, optionally mirrored | — |
 | wildlife | `Critters` | Spawning, updating and drawing insects; stomping and spraying | Bug, PlotController |
+| pest, the creatures on the field (as the model sees them) | `Pest`, `Wildlife` (interfaces) | What pest control needs to know: who is eating which tree, and how to spray one | implemented by Cockroach and Critters |
 | log | `GardenLog`, `GardenLog.Entry`, `Level`, `Category` | Recording, file output, rotation and the in-memory list | GameClock |
 | user interface | `GardenApp`, `GardenController`, `PlotController`, `HelpWindow`, `Irrigation`, `WeatherView`, `GrassTexture` | Window, input, drawing | Garden and the model classes |
 | scripted API | `GardenSimulationAPI` (in `garden.api` and the default package), `GardenSimulationAPI.Options` | The six API methods and their aliases; the background clock; catching up; never throwing | ApiGarden, ApiLog, GardenConfig, GardenLog |
@@ -582,8 +584,7 @@ The nouns in the problem statement and use cases became these classes. The verbs
 
 ### Key design decisions
 
-- **Model and view are separated.** `Garden`, `Plot`, the modules, the sensors, the clock and the weather import no JavaFX. `GardenController` and `PlotController` read the model and forward the gardener's clicks to it, which lets the scripted API reuse the model directly. `GardenLog` has no JavaFX code either: it hands each entry to a `Listener`. The GUI's listener fills the Log tab, and the API's copies plant events into `log.txt`. One exception remains:
-  - `Critters` draws the insects and finds trees through `PlotController`s, and `Garden`, `PestControlSystem` and `PestSensor` refer to it. Because of this link, compiling the API still needs JavaFX. Moving the insects' drawing out of `Critters` is the next refactoring step.
+- **Model and view are separated.** `Garden`, `Plot`, the modules, the sensors, the clock and the weather import no JavaFX. `GardenController` and `PlotController` read the model and forward the gardener's clicks to it, which lets the scripted API reuse the model directly. `GardenLog` has no JavaFX code either: it hands each entry to a `Listener`. The GUI's listener fills the Log tab, and the API's copies plant events into `log.txt`. The insects are drawn with JavaFX, so the model never names them: it sees them only through two interfaces of its own, `Wildlife` (the creatures on the field) and `Pest` (one that eats a tree). `Critters` and `Cockroach` implement them (**dependency inversion**), so the model and the API compile on a plain JDK. `scripts/test.sh` checks this on every run.
 - **Template method.** `GardenModule.update()` is `final`. It checks whether the module is enabled, then calls the subclass's `run()`. Switching a module off calls `shutDown()`. New modules only implement `run`, `shutDown` and `getStatus`.
 - **Strategy-like sensors.** Modules depend on the `Sensor` interface, not on the plots directly. This puts noise and failure handling in one place, and lets a real or mock sensor be swapped in.
 - **Polymorphic insects.** `Critters` updates and draws every `Bug` through the abstract `update` and `draw` methods. Each subclass supplies its own behaviour.
@@ -618,7 +619,7 @@ The nouns in the problem statement and use cases became these classes. The verbs
 | NF1 | `Garden.safely`, guarded frame loop in `GardenController`, uncaught-exception handler in `GardenApp` |
 | NF2 | Modules switchable at run time; verified by test (all 40 trees died with the modules off) |
 | NF5 | Sub-stepping in `GardenController.update` |
-| NF7 | `GardenModule`, `Sensor` |
+| NF7 | `GardenModule`, `Sensor`, `Pest`, `Wildlife` |
 | NF8 | README "References" section |
 | F25 | `GardenSimulationAPI` (both copies) |
 | F26 | `GardenConfig`, `Json`, `garden-config.json` |
@@ -630,6 +631,7 @@ The nouns in the problem statement and use cases became these classes. The verbs
 | NF9 | try/catch in every `GardenSimulationAPI` method, `ApiGarden.safely`, the guarded background clock |
 | NF10 | `GardenSimulationAPI.Options.directory`, `GardenConfig.load`, `GardenLog.start` |
 | NF11 | `GardenSimulationAPITest` (modules switched off) |
+| NF12 | `Pest` and `Wildlife` interfaces; the `java.base`-only build in `scripts/test.sh` |
 
 ---
 

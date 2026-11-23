@@ -15,7 +15,7 @@ import javafx.scene.paint.Color;
  * that sneak in every so often and have to be stomped (clicked) before they
  * eat the trees. Also answers the bugs' questions about the field.
  */
-public class Critters {
+public class Critters implements Wildlife {
 
     private static final int LADYBUGS = 4;
     private static final int BEES = 5;
@@ -213,6 +213,16 @@ public class Critters {
         if (bugs.remove(roach)) {
             splats.add(new Splat(roach.x, roach.y, rng.nextLong(), true));
         }
+    }
+
+    @Override
+    public List<Cockroach> getPests() {
+        return getRoaches();
+    }
+
+    @Override
+    public void exterminate(Pest pest) {
+        if (pest instanceof Cockroach) exterminate((Cockroach) pest);
     }
 
     public List<Cockroach> getRoaches() {

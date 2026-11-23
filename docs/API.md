@@ -9,7 +9,16 @@ Everything is logged to `log.txt`.
 
 Run everything from the project folder: that is where `garden-config.json` is read from and where `log.txt` is written.
 
-**Compiling needs JavaFX.** The project is compiled as a whole, and today the shared model still refers to the GUI's wildlife code, so `javac` needs a JDK that includes JavaFX (or the JavaFX SDK, see below). **Running the API does not:** once compiled, `java -cp out GardenSimulator` works on any JDK 21, and no window opens.
+**The API needs no JavaFX at all,** to compile or to run. On any JDK 21, compile just the API and the model it uses:
+
+```bash
+javac -d out -sourcepath src src/GardenSimulator.java src/GardenSimulationAPI.java src/garden/api/*.java
+java -cp out GardenSimulator 24 5000        # 24 days of 5 seconds each: a quick check
+```
+
+`javac -sourcepath src` compiles only the classes those files use, so the GUI is never touched. `scripts/test.sh` checks on every run that this still works with nothing but `java.base`.
+
+To build the whole project, GUI included, you need a JDK that includes JavaFX (or the JavaFX SDK, see below):
 
 ```bash
 mkdir -p out/garden && cp src/garden/*.fxml src/garden/*.css src/garden/*.md out/garden/
@@ -19,7 +28,7 @@ java -cp out GardenSimulator 24 5000        # 24 days of 5 seconds each: a quick
 java -cp out GardenSimulator 24 5000 42     # ...with random seed 42, to repeat a run exactly
 ```
 
-With a plain JDK and the JavaFX 21 SDK, compile with the SDK on the module path instead (running stays the same):
+With a plain JDK and the JavaFX 21 SDK, compile the whole project with the SDK on the module path instead (running the API stays the same):
 
 ```bash
 javac --module-path /path/to/javafx-sdk-21/lib --add-modules javafx.controls,javafx.fxml -d out $(find src -name '*.java')
@@ -55,7 +64,7 @@ public class MyGardenTest {
 }
 ```
 
-After building the project (above), compile the script against `out` and run it:
+After building the API or the whole project (above), compile the script against `out` and run it:
 
 ```bash
 javac -cp out -d out MyGardenTest.java
@@ -164,7 +173,7 @@ On Windows, separate class path entries with `;` instead of `:` (`-cp "out;out-t
 
 ## Troubleshooting
 
-- **`package javafx... does not exist` while compiling:** the JDK has no JavaFX. Use a JDK that includes it, or the `--module-path` command above.
+- **`package javafx... does not exist` while compiling:** you compiled the whole project on a JDK without JavaFX. For the API alone, use the `-sourcepath` command at the top, which needs no JavaFX. For the GUI, use a JDK that includes JavaFX, or the `--module-path` command.
 - **`log.txt` is not where you expected:** it is written to the folder you ran `java` from.
 - **The log says `garden-config.json not found`:** the script ran from another folder, so the built-in list of 10 plants of each species was used. Run from the project folder to use the config file.
 - **`cannot find symbol: class GardenSimulationAPI`** when compiling a script: add `-cp out` so `javac` can see the compiled project.

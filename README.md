@@ -94,6 +94,7 @@ Months 1-3 are spring, 4-6 summer, 7-9 autumn and 10-12 winter.
 | `HellfireRider`, `GreenBrute` | Rare events: a pixel-art biker who rides along a row setting trees on fire, and a pixel-art brute who smashes trees until he is calmed down. |
 | `PixelSprite` | Draws pixel art written as rows of characters, mirrored for the other direction. |
 | `Critters` | Owns every bug and splat, spawns cockroaches, handles stomping, and answers bugs' questions about the field. |
+| `Pest`, `Wildlife` | The model's view of the creatures: who is eating which tree, and how to spray one. `Cockroach` and `Critters` implement them, so the model and the API need no JavaFX. |
 | `Pipe` | One overhead pipe per row of plots, with an open/closed valve. A closed pipe can't water its plots. |
 | `Irrigation` | Draws the metal pipes across the field (through the fence on both sides), couplings, nozzles, and the falling spray. |
 | `Spigot` | The chrome cross-handle tap on each pipe. Click to turn it a quarter turn: blue cap = open, red cap = shut off. |

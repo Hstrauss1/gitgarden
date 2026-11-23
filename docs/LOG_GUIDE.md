@@ -65,7 +65,7 @@ At the end of each in-game day the log writes a divider and a summary:
 - **Problems only:** set the level filter to "ALERT and worse".
 - **What a person did:** set the category filter to USER.
 - **Jump between days in the file:** search for `====`.
-- **Software errors:** search for `ERROR`. There should be none; each one includes a stack trace.
+- **Software errors:** search for `] ERROR` (with the bracket, so the explanation in the file's header doesn't match). There should be none; each one includes a stack trace.
 
 In a terminal you can also filter the file directly, for example:
 

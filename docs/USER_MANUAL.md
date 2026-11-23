@@ -199,9 +199,10 @@ Every event is recorded twice: in the Log tab, and in a file in the `logs` folde
 
 ## Running the garden without a window (Garden Simulation API)
 
-The graders' test script drives the garden through `GardenSimulationAPI`, with no window. It plants the garden from `garden-config.json`, treats each real hour as one simulated day, and writes everything to `log.txt` in the folder it runs from. To try it after compiling (see Installing and running):
+The graders' test script drives the garden through `GardenSimulationAPI`, with no window. It plants the garden from `garden-config.json`, treats each real hour as one simulated day, and writes everything to `log.txt` in the folder it runs from. It needs no JavaFX: any JDK 21 can build and run it. From the project folder:
 
 ```bash
+javac -d out -sourcepath src src/GardenSimulator.java src/GardenSimulationAPI.java src/garden/api/*.java
 java -cp out GardenSimulator 24 5000
 ```
 

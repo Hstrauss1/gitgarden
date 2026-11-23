@@ -151,6 +151,7 @@ flowchart TB
         T["GameClock · WeatherSystem · Weather"]
         Mods["GardenModule · WateringSystem · HeatingSystem<br/>PestControlSystem · ReplantingSystem"]
         Sens["Sensor · MoistureSensor<br/>TemperatureSensor · PestSensor"]
+        Ifc["Pest · Wildlife<br/>interfaces for the creatures"]
         Gen["BonsaiGenerator · Glyph · BranchType"]
         Log["GardenLog: writes logs/garden_*.log"]
     end
@@ -178,10 +179,11 @@ flowchart TB
     GUI --> Wild
     GUI --> JFX
     Wild --> JFX
-    Model -. "Garden, PestControlSystem and<br/>PestSensor use Critters and Cockroach" .-> Wild
+    Mods --> Ifc
+    Wild -- "Critters implements Wildlife,<br/>Cockroach implements Pest" --> Ifc
 ```
 
-The dotted arrow is the one link from the model to JavaFX code: through it, compiling the API also needs JavaFX. Removing it (moving the wildlife's drawing out of the model) would make `garden.api` and the model compile on a plain JDK.
+No arrow leaves the model toward the wildlife, the GUI or JavaFX. The model sees cockroaches only through two small interfaces of its own, `Pest` and `Wildlife`, and the wildlife implements them: the dependency points from the JavaFX side to the model, never back (**dependency inversion**). So `garden.api` and the model compile on a plain JDK, and `scripts/test.sh` checks this on every run by compiling the API with only `java.base` visible.
 
 ---
 
@@ -199,7 +201,7 @@ classDiagram
         -GameClock clock
         -WeatherSystem weather
         -List~GardenModule~ modules
-        -Critters critters
+        -Wildlife wildlife
         -int baseLife
         -int baseMultiplier
         -int harvested
@@ -359,6 +361,7 @@ classDiagram
     Garden "1" *-- "1" GameClock
     Garden "1" *-- "1" WeatherSystem
     Garden "1" *-- "4" GardenModule : modules
+    Garden --> "0..1" Wildlife : wildlife
     Pipe "1" o-- "1..8" Plot : feeds
     Plot --> Species
     Plot ..> State
@@ -376,7 +379,7 @@ classDiagram
 
 ## 5. Class diagram: modules and sensors
 
-Each automated subsystem extends `GardenModule`. `update()` is a **template method**: it is final, checks whether the module is enabled, then calls the subclass's `run()`. Modules read the world only through `Sensor`s. The API reuses `WateringSystem` and adds three more subclasses of its own (`Drainage`, `ClimateControl`, `ParasiteControl`), shown in [the API class diagram](#8-class-diagram-the-garden-simulation-api).
+Each automated subsystem extends `GardenModule`. `update()` is a **template method**: it is final, checks whether the module is enabled, then calls the subclass's `run()`. Modules read the world only through `Sensor`s, and pest control sees cockroaches only through the `Pest` and `Wildlife` interfaces, so no module depends on JavaFX. The API reuses `WateringSystem` and adds three more subclasses of its own (`Drainage`, `ClimateControl`, `ParasiteControl`), shown in [the API class diagram](#8-class-diagram-the-garden-simulation-api).
 
 ```mermaid
 classDiagram
@@ -424,7 +427,7 @@ classDiagram
 
     class PestControlSystem {
         -PestSensor sensor
-        -Map~Cockroach,Double~ watching
+        -Map~Pest,Double~ watching
         -double tank
         -int killed
         #run(dt, garden)
@@ -459,7 +462,20 @@ classDiagram
     class PestSensor {
         -Garden garden
         +read() double
-        +detect() List~Cockroach~
+        +detect() List~Pest~
+    }
+
+    class Pest {
+        <<interface>>
+        +isEating() boolean
+        +getMealName() String
+        +getMealHealth() double
+    }
+
+    class Wildlife {
+        <<interface>>
+        +getPests() List~Pest~
+        +exterminate(pest Pest)
     }
 
     GardenModule <|-- WateringSystem
@@ -478,7 +494,9 @@ classDiagram
     MoistureSensor --> Plot
     TemperatureSensor --> Garden
     PestSensor --> Garden
-    PestControlSystem ..> Critters : exterminate()
+    PestSensor ..> Wildlife : getPests()
+    PestSensor ..> Pest : isEating()
+    PestControlSystem ..> Wildlife : exterminate()
     ReplantingSystem ..> Plot : chop() and replant
     WateringSystem ..> Pipe : checks isOpen()
 ```
@@ -487,7 +505,7 @@ classDiagram
 
 ## 6. Class diagram: wildlife
 
-`Critters` updates and draws every insect and intruder **polymorphically** through the abstract `Bug` methods. The two intruders are drawn as pixel art with `PixelSprite`.
+`Critters` updates and draws every insect and intruder **polymorphically** through the abstract `Bug` methods. The two intruders are drawn as pixel art with `PixelSprite`. `Critters` implements the model's `Wildlife` interface and `Cockroach` implements `Pest`, which is how pest control reaches them without the model depending on JavaFX.
 
 ```mermaid
 classDiagram
@@ -502,6 +520,8 @@ classDiagram
         +render(canvas Canvas, nanos long)
         +stompAt(x double, y double) boolean
         +exterminate(roach Cockroach)
+        +exterminate(pest Pest)
+        +getPests() List~Cockroach~
         +getRoaches() List~Cockroach~
         +randomLivingPlot() PlotController
         +randomLeafyPlot() PlotController
@@ -582,6 +602,8 @@ classDiagram
     GreenBrute ..> PixelSprite
     HellfireRider ..> Plot : ignite()
     GreenBrute ..> Plot : smash()
+    Wildlife <|.. Critters
+    Pest <|.. Cockroach
     Critters "1" *-- "*" Bug
     Critters "1" *-- "*" Splat
     Bee ..> Plot : pollinate()
