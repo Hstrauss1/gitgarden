@@ -8,7 +8,8 @@ CSEN 275 garden project. This document covers:
 4. user stories with acceptance criteria,
 5. scenarios,
 6. the candidate classes found by analysis, and
-7. a requirement-to-class traceability table.
+7. a requirement-to-class traceability table, and
+8. the research behind the plant and pest model, with sources.
 
 It covers both ways the garden runs: the JavaFX GUI, and the scripted **Garden Simulation API** that *Gardening System APIs* asks for (no GUI, everything logged to `log.txt`; see [API.md](API.md)).
 
@@ -629,3 +630,42 @@ The nouns in the problem statement and use cases became these classes. The verbs
 | NF9 | try/catch in every `GardenSimulationAPI` method, `ApiGarden.safely`, the guarded background clock |
 | NF10 | `GardenSimulationAPI.Options.directory`, `GardenConfig.load`, `GardenLog.start` |
 | NF11 | `GardenSimulationAPITest` (modules switched off) |
+
+---
+
+## 9. Research and sources
+
+The assignment asks for requirements gathered from gardening books, a gardener and the internet. This section records what we found and how it shaped the model.
+
+### 9.1 Published sources
+
+| Topic | What the source says | How it shaped the model |
+|---|---|---|
+| Watering bonsai | Water when the soil starts to dry, not on a fixed schedule; never let the root ball dry out completely, and use free-draining soil so it never stays waterlogged. ([Bonsai Empire: outdoor bonsai care](https://www.bonsaiempire.com/tree-species/outdoor-bonsai)) | The Watering module waters on a moisture **reading**, not a timer: sprinklers on below 30% and off at 90% (F11). Drainage opens above 93% (F31). |
+| Juniper | Prefers slightly dry conditions between waterings; cold hardy, with root protection needed only below about -10°C. ([Bonsai Empire: juniper](https://www.bonsaiempire.com/tree-species/juniper)) | Juniper is the drought-hardy species: its soil dries at half speed, it needs the least water (10 mm/day) and frost barely hurts it (F3, F28). |
+| Pine | Dislikes permanent moisture, and over-watering is a common cause of decline; tolerates strong frost. ([Bonsai Empire: pine](https://www.bonsaiempire.com/tree-species/pines), [overwintering](https://www.bonsaiempire.com/basics/bonsai-care/overwintering)) | Pine roots rot in waterlogged soil, and pine is immune to frost (F3). |
+| Japanese maple | Water whenever the soil starts to dry, up to twice a day in warm weather for small pots; shade from harsh afternoon sun in summer. ([Bonsai Empire: Japanese maple](https://www.bonsaiempire.com/tree-species/maple)) | Maple dries fastest in a drought and suffers most from heat stress (F3, F29). Climate control's shade cloth (F31) follows the "shade in hot weather" advice. |
+| Cherry | Needs a lot of water in the growing season, but a waterlogged root ball rots. ([Bonsai Empire: cherry](https://www.bonsaiempire.com/tree-species/cherry-prunus)) | Cherry grows fastest in rain, and needs 20 mm/day (F3, F28). |
+| Winter care | Most trees die not of cold but of drying out in sun and wind while the root ball is frozen; protect roots and shelter from wind. ([Bonsai Empire: overwintering](https://www.bonsaiempire.com/basics/bonsai-care/overwintering)) | The Heating module warms the beds (the roots), not the air (F12). Wind damages tender species (F3). |
+| Aphids | Monitor leaf undersides; wash aphids off or use insecticidal soap or oil; avoid spraying drought-stressed plants or in very hot weather. ([UC IPM: aphids](https://ipm.ucanr.edu/home-and-landscape/aphids/)) | Parasite control detects first, then sprays repeatedly, and a spray kills pests but repairs nothing: "spraying never heals" (F30, F31). |
+| Spider mites | They damage leaves by sucking out cell contents; insecticidal soap or oil controls them; broad insecticides can kill their predators and make outbreaks worse. ([UC IPM: spider mites](https://ipm.ucanr.edu/home-and-landscape/spider-mites/)) | Damage continues every hour an infestation feeds, and the plant cannot heal until it is cleared (F30). |
+| Scales, bark beetles | UC IPM publishes separate Pest Notes for scales and for bark beetles. ([UC IPM Pest Notes library](https://ipm.ucanr.edu/PMG/PESTNOTES/index.html)) | Scale insects (juniper, maple) and pine beetles (pine) are in each species' list of parasites (F30). |
+
+### 9.2 Where the model deliberately simplifies
+
+- **Pests are harsher than in real gardens.** UC IPM notes that aphids rarely kill established plants, but the simulation lets an untreated infestation kill a plant in about 3½ days. This is deliberate: graders must be able to see within a 24-day run that pest control matters (NF2, NF11).
+- **Which tree is thirstiest.** Bonsai Empire describes cherry as needing a lot of water in the growing season, but the model gives Japanese maple the highest requirement (25 mm/day against cherry's 20). A future change could swap them.
+- **Spraying in heat.** UC IPM advises against spraying drought-stressed plants or in very hot weather. Parasite control sprays whatever the temperature; holding off on hot days would be a realistic improvement.
+- **Time.** A day lasts 10 simulated seconds, so growth, healing and pest damage are scaled to be visible in minutes rather than weeks.
+
+### 9.3 Gardener interview (to be completed by the team)
+
+Not done yet. A team member should interview a gardener (a nursery worker, a bonsai club member, or a campus grounds keeper), write down their name, role and the date, and record the answers here. Suggested questions:
+
+- How do you decide when to water, and what signs show a tree is too dry or too wet?
+- Which of these trees (juniper, pine, Japanese maple, cherry) need the most water, and which suffer most in heat or frost?
+- Which pests do you see most on each, and how quickly do they do real damage?
+- How do you treat an infestation, and how long does a plant take to recover afterwards?
+- What would you want an automated garden to alert you about first?
+
+Each answer that changes a number in the model (a water requirement, a damage rate, a threshold) should be noted here next to the feature it affects.
