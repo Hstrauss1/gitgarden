@@ -8,14 +8,14 @@ import java.util.Random;
  * day, and call getState() at the end.
  *
  * <pre>
- * java -cp out GardenSimulator                 24 days of one real hour each (the graders' run)
- * java -cp out GardenSimulator 24 5000         24 days of 5 seconds each (a quick check)
- * java -cp out GardenSimulator 24 5000 42      ... with random seed 42, so the run can be repeated
+ * java -cp out ApiDemo                24 days of one real hour each (the graders' run)
+ * java -cp out ApiDemo 24 5000        24 days of 5 seconds each (a quick check)
+ * java -cp out ApiDemo 24 5000 42     ... with random seed 42, so the run can be repeated
  * </pre>
  *
  * Everything is written to log.txt in the working directory.
  */
-public class GardenSimulator {
+public class ApiDemo {
 
     public static void main(String[] args) throws InterruptedException {
         int days = args.length > 0 ? Integer.parseInt(args[0]) : 24;

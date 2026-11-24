@@ -12,8 +12,8 @@ Run everything from the project folder: that is where `garden-config.json` is re
 **The API needs no JavaFX at all,** to compile or to run. On any JDK 21, compile just the API and the model it uses:
 
 ```bash
-javac -d out -sourcepath src src/GardenSimulator.java src/GardenSimulationAPI.java src/garden/api/*.java
-java -cp out GardenSimulator 24 5000        # 24 days of 5 seconds each: a quick check
+javac -d out -sourcepath src src/ApiDemo.java src/GardenSimulationAPI.java src/garden/api/*.java
+java -cp out ApiDemo 24 5000        # 24 days of 5 seconds each: a quick check
 ```
 
 `javac -sourcepath src` compiles only the classes those files use, so the GUI is never touched. `scripts/test.sh` checks on every run that this still works with nothing but `java.base`.
@@ -23,9 +23,9 @@ To build the whole project, GUI included, you need a JDK that includes JavaFX (o
 ```bash
 mkdir -p out/garden && cp src/garden/*.fxml src/garden/*.css src/garden/*.md out/garden/
 javac -d out $(find src -name '*.java')
-java -cp out GardenSimulator                # 24 days of one real hour each: the real test
-java -cp out GardenSimulator 24 5000        # 24 days of 5 seconds each: a quick check
-java -cp out GardenSimulator 24 5000 42     # ...with random seed 42, to repeat a run exactly
+java -cp out ApiDemo                # 24 days of one real hour each: the real test
+java -cp out ApiDemo 24 5000        # 24 days of 5 seconds each: a quick check
+java -cp out ApiDemo 24 5000 42     # ...with random seed 42, to repeat a run exactly
 ```
 
 With a plain JDK and the JavaFX 21 SDK, compile the whole project with the SDK on the module path instead (running the API stays the same):
@@ -74,7 +74,7 @@ java -Dgarden.dayMillis=2000 -cp out MyGardenTest    # two seconds per day, for 
 
 `-Dgarden.dayMillis` works for any script that uses the no-argument constructor. Read the results in `log.txt`; its format is explained in [LOG_GUIDE.md](LOG_GUIDE.md#the-apis-logtxt).
 
-`GardenSimulator` follows the example script in the API document: each day it makes one or two random
+`ApiDemo` follows the example script in the API document (it isn't called `GardenSimulator` like that script, so a grader's own `GardenSimulator.java` can be compiled next to ours without a "duplicate class" error): each day it makes one or two random
 calls (rain 0–50 mm, temperature 40–120°F, or a parasite picked from `getPlants()`), sleeps until the day
 ends, and calls `getState()` at the end. `log.txt` and `garden-config.json` are read and written in the
 working directory (relative paths only).

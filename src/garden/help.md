@@ -202,8 +202,8 @@ Every event is recorded twice: in the Log tab, and in a file in the `logs` folde
 The graders' test script drives the garden through `GardenSimulationAPI`, with no window. It plants the garden from `garden-config.json`, treats each real hour as one simulated day, and writes everything to `log.txt` in the folder it runs from. It needs no JavaFX: any JDK 21 can build and run it. From the project folder:
 
 ```bash
-javac -d out -sourcepath src src/GardenSimulator.java src/GardenSimulationAPI.java src/garden/api/*.java
-java -cp out GardenSimulator 24 5000
+javac -d out -sourcepath src src/ApiDemo.java src/GardenSimulationAPI.java src/garden/api/*.java
+java -cp out ApiDemo 24 5000
 ```
 
 That runs 24 days of 5 seconds each. Leave out `24 5000` for the full run of one real hour per day. The methods, the config file and the modules are described in docs/API.md, and `log.txt` is explained in the Log Guide.

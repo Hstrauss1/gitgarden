@@ -29,7 +29,7 @@ cp src/garden/*.fxml src/garden/*.css src/garden/*.md out/garden/
 # The API must build on a plain JDK: compile it alone with only java.base visible, so any
 # JavaFX reference that creeps into the model or the API fails here.
 "${BIN}javac" --limit-modules java.base -d out-api -sourcepath src \
-    src/GardenSimulator.java src/GardenSimulationAPI.java src/garden/api/*.java
+    src/ApiDemo.java src/GardenSimulationAPI.java src/garden/api/*.java
 echo "The Garden Simulation API compiles without JavaFX."
 "${BIN}javac" -cp "out:$JUNIT" -d out-test $(find test -name '*.java')
 "${BIN}java" -jar "$JUNIT" execute -cp out:out-test --scan-classpath --disable-banner "$@"

@@ -135,7 +135,7 @@ Mermaid has no package diagram, so this is drawn as a flowchart: each box is a p
 flowchart TB
     subgraph Default["default package: entry point for the graders' script"]
         SAPI["GardenSimulationAPI"]
-        Sim["GardenSimulator"]
+        Sim["ApiDemo"]
     end
 
     subgraph Api["garden.api: scripted API, no GUI"]
@@ -768,7 +768,7 @@ classDiagram
 classDiagram
     direction TB
 
-    class GardenSimulator {
+    class ApiDemo {
         +main(args String[])$
     }
 
@@ -943,7 +943,7 @@ classDiagram
     class MoistureSensor
     class GardenLog
 
-    GardenSimulator ..> ScriptAPI : drives, like the graders' script
+    ApiDemo ..> ScriptAPI : drives, like the graders' script
     CoreAPI <|-- ScriptAPI
     CoreAPI "1" *-- "1" Options
     CoreAPI "1" *-- "0..1" ApiGarden : garden

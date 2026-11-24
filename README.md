@@ -28,6 +28,7 @@ or you can chop and replant it sooner yourself.
 The **Help** button opens the full user manual ([docs/USER_MANUAL.md](docs/USER_MANUAL.md)).
 
 The scripted **Garden Simulation API** (no GUI, logs to `log.txt`) is described in [docs/API.md](docs/API.md).
+How it was tested (JUnit tests, 24-hour real-time runs, balance check) is in [docs/TESTING.md](docs/TESTING.md).
 
 Requirements, use cases, user stories and scenarios are in [docs/ANALYSIS.md](docs/ANALYSIS.md). The UML (use case, class, state, sequence and activity diagrams) is in [docs/UML.md](docs/UML.md).
 
@@ -54,8 +55,8 @@ click, and a daily report) in the **Log** tab (filter by category or level, and 
 
 Each module, each plot's update, each plot's drawing and each whole frame runs inside its own `try/catch`.
 A problem is logged as `ERROR` with its stack trace and counted in the status bar, and the garden carries on.
-There is also a default uncaught-exception handler. An unattended test at 256x (about 9 simulated years, the
-equivalent of over 26 hours at 1x) finished with 0 errors and 0 tree deaths with the modules on. Then, with
+There is also a default uncaught-exception handler. An unattended test at 256x (about 9 simulated years; at 1x
+a simulated year takes one real hour) finished with 0 errors and 0 tree deaths with the modules on. Then, with
 the modules switched off, all 40 trees died within 3 simulated years.
 
 **Life** sets tree size and **Multiplier** sets how often it branches, just like `cbonsai -L` and `-M`.
@@ -120,7 +121,7 @@ javac -d out $(find src -name '*.java')
 java -cp out garden.GardenApp
 ```
 
-`scripts/test.sh` builds everything and runs the JUnit tests; `java -cp out GardenSimulator` runs the
+`scripts/test.sh` builds everything and runs the JUnit tests; `java -cp out ApiDemo` runs the
 API test script (see [docs/API.md](docs/API.md)).
 
 In IntelliJ: set the project SDK to a JDK 21 that includes JavaFX, mark `src` as a Sources Root, and run

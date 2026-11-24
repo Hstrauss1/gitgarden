@@ -580,7 +580,7 @@ The nouns in the problem statement and use cases became these classes. The verbs
 | climate control | `ClimateControl` | Heating cables and shade cloth; bed temperature | ApiGarden |
 | infestation, parasite control | `ParasiteControl`, `ParasiteControl.Infestation` | Severity, detection and spraying | Plot, ApiGarden |
 | API log | `ApiLog` | `log.txt`: the legend, aligned columns, and counts of warnings, alerts and errors | ApiGarden |
-| test script | `GardenSimulator` | An example 24-day run shaped like the graders' script | GardenSimulationAPI |
+| test script | `ApiDemo` | An example 24-day run shaped like the graders' script | GardenSimulationAPI |
 
 ### Key design decisions
 
